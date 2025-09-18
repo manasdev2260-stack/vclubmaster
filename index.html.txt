@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Card Portal — Send Payment Screenshot</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#071027; --card:#0b1220; --muted:#94a3b8; --accent:#7c3aed; --glass: rgba(255,255,255,0.03);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#071027 0%, #0f1724 100%);color:#e6eef8;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1100px;margin:36px auto;padding:20px}
+  header{display:flex;justify-content:space-between;align-items:center;gap:16px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{height:56px;width:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#2dd4bf);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:18px}
+  h1{margin:0;font-size:20px}
+  p.lead{margin:0;color:var(--muted);font-size:13px}
+  .controls{display:flex;gap:10px;align-items:center}
+  .search{background:var(--glass);border:1px solid rgba(255,255,255,0.04);padding:8px 12px;border-radius:12px;color:var(--muted)}
+  .btn{background:linear-gradient(90deg,var(--accent),#4c1d95);padding:10px 14px;border-radius:12px;border:0;color:white;font-weight:600;cursor:pointer}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;margin-top:24px}
+  .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:18px;border-radius:14px;border:1px solid rgba(255,255,255,0.03)}
+  .card .title{font-weight:700;font-size:15px;margin-bottom:6px}
+  .price{font-weight:800;font-size:18px;margin-top:10px}
+  .card footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+  .secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:8px 10px;border-radius:10px;color:var(--muted);cursor:pointer}
+  .cart-floating{position:fixed;right:28px;bottom:28px;background:linear-gradient(90deg,#0b1220,#091023);padding:12px;border-radius:14px;box-shadow:0 10px 30px rgba(2,6,23,0.6);display:flex;gap:12px;align-items:center}
+  .cart-count{background:var(--accent);padding:6px 8px;border-radius:999px;font-weight:700}
+  /* Modal */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:60}
+  .modal{width:100%;max-width:820px;background:#061022;border-radius:14px;padding:20px;border:1px solid rgba(255,255,255,0.03);color:#e6eef8}
+  label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+  input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+  .summary{background:rgba(255,255,255,0.02);padding:12px;border-radius:10px}
+  .receipt-preview{margin-top:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+  .small{font-size:12px;color:var(--muted)}
+  .tg-btn{display:inline-flex;align-items:center;gap:10px;background:#00aef0;padding:8px 12px;border-radius:10px;border:0;color:white;font-weight:700;cursor:pointer;text-decoration:none}
+  .tg-copy{background:transparent;border:1px dashed rgba(255,255,255,0.06);padding:6px 10px;border-radius:8px;color:var(--muted);cursor:pointer;margin-left:8px}
+  .screenshot-preview{max-width:100%;border-radius:10px;margin-top:8px;border:1px solid rgba(255,255,255,0.04)}
+  footer.notice{margin-top:18px;background:rgba(255,255,255,0.02);padding:12px;border-radius:10px;color:#ffdede}
+  @media (max-width:780px){.modal{padding:16px}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">CP</div>
+        <div>
+          <h1>Card Portal</h1>
+          <p class="lead">Legal prepaid & gift card portal • Prices ₹15,745 — ₹43,540</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <input class="search" id="search" placeholder="Search cards..." />
+        <button class="btn" id="view-cart-btn">Cart (<span id="cart-count">0</span>)</button>
+      </div>
+    </header>
+
+    <main>
+      <section style="margin-top:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <h2 style="margin:0">Available Cards</h2>
+          <div class="small">Prices range ₹15,745 — ₹43,540</div>
+        </div>
+
+        <div class="grid" id="products-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="cart-floating" id="cart-float" title="Open cart">
+    <div style="text-align:right">
+      <div style="font-weight:700">Your Cart</div>
+      <div class="small">Ready to checkout</div>
+    </div>
+    <div class="cart-count" id="cart-count-float">0</div>
+  </div>
+
+  <!-- Checkout modal -->
+  <div class="modal-backdrop" id="modal">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0">Checkout</h3>
+        <button class="secondary" id="close-modal">Close</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 360px;gap:14px;margin-top:12px">
+        <div>
+          <label>Full name</label>
+          <input id="payer-name" placeholder="Name on receipt" />
+
+          <label style="margin-top:10px">Email</label>
+          <input id="payer-email" placeholder="you@example.com" />
+
+          <label style="margin-top:10px">Payment method</label>
+          <select id="payment-method">
+            <option value="bank">Bank Transfer</option>
+            <option value="upi">UPI</option>
+            <option value="wallet">Wallet</option>
+          </select>
+
+          <label style="margin-top:10px">Upload payment screenshot (PNG/JPEG)</label>
+          <input id="screenshot" type="file" accept="image/*" />
+          <img id="screenshot-preview" class="screenshot-preview" alt="Preview" style="display:none"/>
+
+          <div style="margin-top:8px" class="small">
+            After uploading, open Telegram and send your payment screenshot to the channel/username shown on the right.
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+            <button class="btn" id="confirm-sent">I have sent screenshot on Telegram</button>
+            <button class="secondary" id="save-local">Save screenshot (local)</button>
+          </div>
+
+        </div>
+
+        <aside>
+          <div class="summary">
+            <div style="display:flex;justify-content:space-between">
+              <div><strong>Order summary</strong></div>
+              <div id="summary-count">0 items</div>
+            </div>
+            <div id="summary-list" style="margin-top:8px"></div>
+            <div style="display:flex;justify-content:space-between;margin-top:12px;font-weight:700">
+              <div>Total</div><div id="summary-total">₹0</div>
+            </div>
+          </div>
+
+          <div class="receipt-preview" style="margin-top:12px">
+            <strong>Send screenshot to Telegram</strong>
+            <p class="small" style="margin:8px 0 6px">Open chat with the Telegram handle below and attach the screenshot you uploaded.</p>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <a id="tg-link" class="tg-btn" href="https://t.me/vclubmaster" target="_blank" rel="noopener noreferrer">Open @vclubmaster</a>
+              <button id="copy-tg" class="tg-copy" title="Copy Telegram handle">Copy @vclubmaster</button>
+            </div>
+            <div class="small" style="margin-top:8px;color:var(--muted)">
+              NOTE: This page <strong>does not</strong> send files to Telegram. You must open Telegram and send the screenshot yourself.
+            </div>
+          </div>
+
+          <div class="small" style="margin-top:12px;color:var(--muted)">
+            For production, use a secure backend to receive files and forward to Telegram via a bot (server side). Do not share sensitive data.
+          </div>
+        </aside>
+      </div>
+
+      <footer class="notice">
+        <strong></strong> 
+      </footer>
+    </div>
+  </div>
+
+<script>
+/* ===== Sample products (legal/generic items only) ===== */
+const PRODUCTS = [
+  { id: 'card-1', title:'Platinum Prepaid Card — Annual', type:'Prepaid', price:15745, tag:'Platinum' },
+  { id: 'card-2', title:'Travel Gift Card (International)', type:'Gift', price:18990, tag:'Travel' },
+  { id: 'card-3', title:'Business Expense Card (Corporate)', type:'Corporate', price:21400, tag:'Corporate' },
+  { id: 'card-4', title:'Premium Subscription Card (1 year)', type:'Subscription', price:24880, tag:'Premium' },
+  { id: 'card-5', title:'High-Value Gift Card', type:'Gift', price:31250, tag:'High Value' },
+  { id: 'card-6', title:'Ultimate Travel Pass Card', type:'Prepaid', price:35500, tag:'Travel Plus' },
+  { id: 'card-7', title:'Elite Business Wallet Card', type:'Corporate', price:40320, tag:'Elite' },
+  { id: 'card-8', title:'Exclusive Membership Card', type:'Subscription', price:43540, tag:'Exclusive' }
+];
+
+const cart = {};
+function fmt(n){ return '₹' + n.toLocaleString('en-IN'); }
+
+function renderProducts(filter=''){
+  const grid = document.getElementById('products-grid');
+  grid.innerHTML = '';
+  const q = filter.trim().toLowerCase();
+  const list = PRODUCTS.filter(p => !q || (p.title+ ' ' + p.type + ' ' + p.tag).toLowerCase().includes(q));
+  list.forEach(p=>{
+    const el = document.createElement('div');
+    el.className='card';
+    el.innerHTML = `
+      <div>
+        <div class="title">${p.title}</div>
+        <div style="color:var(--muted);font-size:13px">${p.type} • ${p.tag}</div>
+        <div class="price">${fmt(p.price)}</div>
+      </div>
+      <footer>
+        <div style="font-size:13px;color:var(--muted)">${p.price>30000? 'Popular':'Best value'}</div>
+        <div>
+          <button class="secondary" onclick="addToCart('${p.id}')">Add</button>
+          <button class="btn" onclick="buyNow('${p.id}')">Buy</button>
+        </div>
+      </footer>
+    `;
+    grid.appendChild(el);
+  });
+}
+
+function addToCart(id){
+  cart[id] = (cart[id] || 0) + 1;
+  updateCartUI();
+  showToast('Added to cart');
+}
+function removeFromCart(id){
+  if(cart[id]){ delete cart[id]; updateCartUI(); }
+}
+function updateCartUI(){
+  const count = Object.values(cart).reduce((s,v)=>s+v,0);
+  document.getElementById('cart-count').textContent = count;
+  document.getElementById('cart-count-float').textContent = count;
+}
+
+function openCheckout(prefillId){
+  populateSummary();
+  document.getElementById('modal').style.display = 'flex';
+  if(prefillId){
+    if(!cart[prefillId]) cart[prefillId]=1;
+    updateCartUI();
+    populateSummary();
+  }
+}
+function closeCheckout(){ document.getElementById('modal').style.display='none'; }
+
+function populateSummary(){
+  const list = document.getElementById('summary-list');
+  list.innerHTML = '';
+  let total=0, items=0;
+  for(const id in cart){
+    const qty = cart[id];
+    const product = PRODUCTS.find(p=>p.id===id);
+    if(!product) continue;
+    items += qty;
+    total += product.price * qty;
+    const row = document.createElement('div');
+    row.style.display='flex';row.style.justifyContent='space-between';row.style.marginTop='6px';
+    row.innerHTML = `<div>${product.title} × ${qty}</div><div>${fmt(product.price*qty)}</div>`;
+    list.appendChild(row);
+  }
+  document.getElementById('summary-total').textContent = fmt(total);
+  document.getElementById('summary-count').textContent = `${items} item${items!==1?'s':''}`;
+}
+
+/* Screenshot upload & preview (client-side only) */
+const screenshotInput = document.getElementById('screenshot');
+const screenshotPreview = document.getElementById('screenshot-preview');
+
+screenshotInput.addEventListener('change', (e)=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) { screenshotPreview.style.display='none'; screenshotPreview.src=''; return; }
+  if(!f.type.startsWith('image/')) { alert('Please upload an image file (PNG/JPEG).'); screenshotInput.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    screenshotPreview.src = ev.target.result;
+    screenshotPreview.style.display = 'block';
+  };
+  reader.readAsDataURL(f);
+});
+
+/* Buttons */
+document.getElementById('view-cart-btn').addEventListener('click',()=>openCheckout());
+document.getElementById('cart-float').addEventListener('click',()=>openCheckout());
+document.getElementById('close-modal').addEventListener('click',closeCheckout);
+
+/* Save screenshot locally (trigger download) */
+document.getElementById('save-local').addEventListener('click', ()=>{
+  const f = screenshotInput.files && screenshotInput.files[0];
+  if(!f) return alert('No screenshot selected.');
+  const url = URL.createObjectURL(f);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `payment_${Date.now()}.${f.name.split('.').pop()}`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Screenshot downloaded locally.');
+});
+
+/* Confirm sent */
+document.getElementById('confirm-sent').addEventListener('click', ()=>{
+  const name = document.getElementById('payer-name').value.trim() || 'Customer';
+  const email = document.getElementById('payer-email').value.trim() || '';
+  const total = document.getElementById('summary-total').textContent || '₹0';
+  if(Object.keys(cart).length===0){ showToast('Cart is empty. Add items first.'); return; }
+  if(!screenshotInput.files || !screenshotInput.files[0]){ if(!confirm('You have not uploaded a screenshot. Are you sure you already sent it on Telegram?')) return; }
+  // This is client-side only: show confirmation message
+  alert(`Thank you ${name}.\nIf you sent the screenshot to @vclubmaster on Telegram, your order will be processed.\nOrder total: ${total}`);
+  // Clear cart for demo:
+  for(const k in cart) delete cart[k];
+  updateCartUI(); populateSummary(); closeCheckout();
+});
+
+/* Copy tg handle button */
+document.getElementById('copy-tg').addEventListener('click', ()=>{
+  const text = '@vclubmaster';
+  if(navigator.clipboard){ navigator.clipboard.writeText(text).then(()=> showToast('Copied @vclubmaster to clipboard'));}
+  else { prompt('Copy the Telegram handle', text); }
+});
+
+/* small toast */
+function showToast(msg){
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.position='fixed';t.style.left='50%';t.style.transform='translateX(-50%)';
+  t.style.bottom='38px';t.style.background='rgba(0,0,0,0.6)';t.style.padding='10px 16px';
+  t.style.borderRadius='10px';t.style.color='white';t.style.zIndex=9999;
+  document.body.appendChild(t);
+  setTimeout(()=>t.style.opacity='0',2000);
+  setTimeout(()=>t.remove(),2400);
+}
+
+document.getElementById('search').addEventListener('input',(e)=>renderProducts(e.target.value));
+
+renderProducts();
+updateCartUI();
+</script>
+</body>
+</html>
